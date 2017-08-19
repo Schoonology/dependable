@@ -2,12 +2,12 @@
   "name": "dependable",
   "version": "1.0.0",
   "main": "index.js",
-  "author": "Sean Hess",
+  "author": "Michael Schoonmaker",
   "contributors": [
-    "Jamison Dance <jergason@gmail.com> (http://jamisondance.com)"
+    "Michael Schoonmaker <michael.r.schoonmaker@gmail.com> (http://www.schoonology.com)"
   ],
   "repository": {
-    "url": "git@github.com:idottv/dependable.git"
+    "url": "git@github.com:Schoonology/dependable.git"
   },
   "scripts": {
     "test": "node_modules/.bin/mocha -R spec --compilers coffee:coffee-script test/*",
