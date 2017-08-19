@@ -330,3 +330,31 @@ describe 'inject', ->
   describe 'maybe', ->
     it 'should support objects/data instead of functions?'
     it 'should support optional dependencies?'
+
+describe 'getSandboxed', ->
+  it 'should return a module without deps', ->
+    Abc = -> "abc"
+    deps = container()
+    deps.register "abc", Abc
+    assert.equal deps.getSandboxed("abc"), "abc"
+
+  it 'should get a single, replaced dependency', ->
+    Stuff = (names) -> names[0]
+    Names = () -> ["one", "two"]
+    deps = container()
+    deps.register "stuff", Stuff
+    deps.register "names", Names
+    assert.equal deps.getSandboxed("stuff", {
+      names: ["three", "four"]
+    }), "three"
+
+  it 'should throw if an override is missing', ->
+    Stuff = (names) -> names[0]
+    Names = () -> ["one", "two"]
+    deps = container()
+    deps.register "stuff", Stuff
+    deps.register "names", Names
+
+    closure = () -> deps.getSandboxed("stuff")
+    assert.throws(closure, /was not registered/)
+

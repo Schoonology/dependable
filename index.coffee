@@ -108,6 +108,12 @@ exports.container = ->
 
     return instance
 
+  getSandboxed = (name, overrides) ->
+    mockContainer = exports.container()
+    mockContainer.register(name, factories[name].func)
+
+    return mockContainer.get(name, overrides)
+
   haveVisited = (visited, name) ->
     isName = (n) -> n is name
     visited.filter(isName).length
@@ -123,6 +129,7 @@ exports.container = ->
 
   container =
     get: get
+    getSandboxed: getSandboxed
     resolve: resolve
     register: register
     load: load
