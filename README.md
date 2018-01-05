@@ -1,89 +1,62 @@
 # Dependable
 
-A minimalist dependency injection framework for Node.js
+A minimalist dependency injection framework for Node.js.
 
-## Example
+## Installation
+To install the latest version:
 
-### Create a container
+```bash
+npm install --save dependable
+```
+
+## Usage
 
 Create a new container by calling `dependable.container`:
 
-```js
-var dependable = require('dependable'),
-    container = dependable.container();
+```JavaScript
+const dependable = require('dependable');
+const container = dependable.container();
 ```
 
-### Register some dependencies
+To register a new dependency, call `container.register`:
 
-Register a few dependencies for later use:
-
-```js
-container.register('app', 'web app');
-container.register('logger', function() { return 'message'; } );
-```
-
-### Register a dependency that has other dependencies
-
-When the argument is a function, the function's arguments are automatically
-populated with the correct dependencies, and the return value of the function
-is registered as the dependency:
-
-```js
-container.register('app', function (logger, middleware) {
-  let app = {
-    log: function() {
-      return logger;
-    },
-    middleware };
-  return app;
+```JavaScript
+container.register('formatter', function () {
+  return function (message) {
+    return `formatted ${message}`;
+  };
 });
 ```
 
-### Register a dependency out-of-order
+Dependencies can depend on each other as well:
 
-`app` depends on a `middleware`, which hasn't been registered yet.
-Dependable resolves dependencies lazily, so we can define this dependency
-after-the-fact:
-
-```js
-container.register('middleware', {
-  session: 'cookies',
-  auth: 'json-web-token'
+```JavaScript
+container.register('logger', function (formatter) {
+  return formatter('logged message');
 });
 ```
 
-### Resolve a dependency and use it
+To get a registered dependency, simply use `dependable.get`:
 
-Like with container.register, the function arguments are automatically resolved, along
-with their dependencies:
+```JavaScript
+const logger = container.get('logger');
 
-```js
-container.resolve(function (logger) {
+// This will print "formatted logged message"
+console.log(logger);
+```
+
+You can also resolve a dependency with a callback using `dependable.resolve`:
+
+```JavaScript
+container.resolve('logger', function (logger) {
+  // This will print "formatted logged message"
   console.log(logger);
-  /*
-   * message
-   */
-});
-```
-
-### Override dependencies at resolve time
-
-It's also possible to override dependencies at resolve time:
-
-```js
-let logger = 'overridden message';
-
-container.resolve({ logger: logger }, function (app) {
-  console.log(app.log());
-  /*
-   * overridden message
-   */
 });
 ```
 
 ## API
 
-`container.register(name, function|object)` - Registers a dependency by name.
+`container.register(name, function)` - Registers a dependency by name. `function` can be a function that takes dependencies and returns anything, or an object itself with no dependencies.
 
 `container.get(name, overrides = {})` - Returns a dependency by name, with all dependencies injected. If you specify overrides, the dependency will be given those overrides instead of those registered.
 
@@ -95,7 +68,7 @@ container.resolve({ logger: logger }, function (app) {
 
 ## Development
 
-Tests are written with mocha. To run the tests, run `npm test`.
+Tests are written with Mocha. To run the tests, run `npm test`.
 
 ## License
 
