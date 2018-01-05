@@ -19,6 +19,11 @@ describe("dependency injection", function() {
       assert.equal(subject.get("logger"), "message");
     });
 
+    it("should register an object", function() {
+      subject.register("logger", "message");
+      assert.equal(subject.get("logger"), "message");
+    });
+
     it("should register a factory with a single dependency", function() {
       subject.register("logger", function() {
         return "message";
@@ -78,8 +83,6 @@ describe("dependency injection", function() {
         ["custom-message", "route"]
       );
     });
-
-    xit("should allow overriding of a dependency with a function?", function() {});
 
     it("should traverse a graph of dependencies", function() {
       subject.register("app", function(logger) {
@@ -214,97 +217,79 @@ describe("dependency injection", function() {
         done();
       });
     });
-  });
 
-  describe("overrides", function() {
-    it("should ignore the cache when you override", function() {
-      var a, deps, overridenA;
-      deps = container();
-      deps.register("a", function(b) {
-        return {
-          value: b
-        };
+    it("correctly parses functions with newlines in the argument lists", function(done) {
+      subject.register("logger", function() {
+        return "message";
       });
-      deps.register("b", "b");
-      a = deps.get("a");
-      overridenA = deps.get("a", {
-        b: "henry"
+      subject.register("router", function() {
+        return "route";
       });
-      assert.notEqual(overridenA.value, "b", "it used the cached value");
-      return assert.equal(overridenA.value, "henry");
+      subject.resolve(function(logger, router) {
+        assert.equal(logger, "message");
+        assert.equal(router, "route");
+        done();
+      });
     });
-    return it("should override on resolve", function(done) {
-      var deps;
-      deps = container();
-      deps.register("a", function(b) {
-        return {
-          value: b
-        };
+
+    it("should support overriding dependencies", function(done) {
+      subject.register("formatter", function() {
+        return message => `formatted ${message}`;
       });
-      deps.register("b", "b");
-      return deps.resolve(
+      subject.register("logger", function(formatter) {
+        return formatter("message");
+      });
+      subject.resolve(
         {
-          b: "bob"
+          formatter: message => `overridden ${message}`
         },
-        function(a) {
-          assert.equal(a.value, "bob");
-          return done();
+        function(logger) {
+          assert.equal(logger, "overridden message");
+          done();
         }
       );
     });
   });
-  return describe("simple dependencies", function() {
-    return it("doesnt have to be a function. objects work too", function() {
-      var deps;
-      deps = container();
-      deps.register("a", "a");
-      return assert.equal(deps.get("a"), "a");
-    });
-  });
 });
 
-describe("getSandboxed", function() {
-  it("should return a module without deps", function() {
-    var Abc, deps;
-    Abc = function() {
-      return "abc";
-    };
-    deps = container();
-    deps.register("abc", Abc);
-    return assert.equal(deps.getSandboxed("abc"), "abc");
+describe("test utils", function() {
+  let subject;
+
+  beforeEach(function() {
+    subject = container();
   });
-  it("should get a single, replaced dependency", function() {
-    var Names, Stuff, deps;
-    Stuff = function(names) {
-      return names[0];
-    };
-    Names = function() {
-      return ["one", "two"];
-    };
-    deps = container();
-    deps.register("stuff", Stuff);
-    deps.register("names", Names);
-    return assert.equal(
-      deps.getSandboxed("stuff", {
-        names: ["three", "four"]
-      }),
-      "three"
-    );
-  });
-  return it("should throw if an override is missing", function() {
-    var Names, Stuff, closure, deps;
-    Stuff = function(names) {
-      return names[0];
-    };
-    Names = function() {
-      return ["one", "two"];
-    };
-    deps = container();
-    deps.register("stuff", Stuff);
-    deps.register("names", Names);
-    closure = function() {
-      return deps.getSandboxed("stuff");
-    };
-    return assert.throws(closure, /was not registered/);
+
+  describe("#getSandboxed", function() {
+    it("should return a module without deps", function() {
+      subject.register("logger", function() {
+        return "message";
+      });
+      return assert.equal(subject.getSandboxed("logger"), "message");
+    });
+
+    it("should get a single, replaced dependency", function() {
+      subject.register("logger", function(formatter) {
+        return formatter("message");
+      });
+      subject.register("formatter", function() {
+        return message => `formatted ${message}`;
+      });
+      assert.equal(
+        subject.getSandboxed("logger", {
+          formatter: () => "overridden message"
+        }),
+        "overridden message"
+      );
+    });
+
+    it("should throw if an override is missing", function() {
+      subject.register("logger", function(formatter) {
+        return formatter("message");
+      });
+      subject.register("formatter", function() {
+        return message => `formatted ${message}`;
+      });
+      assert.throws(() => subject.getSandboxed("logger"), /was not registered/);
+    });
   });
 });
