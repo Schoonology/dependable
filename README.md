@@ -1,6 +1,6 @@
-# Dependable [![Build Status](https://travis-ci.org/idottv/dependable.png)](https://travis-ci.org/idottv/dependable)
+# Dependable
 
-A minimalist dependency injection framework for node.js.
+A minimalist dependency injection framework for Node.js
 
 ## Example
 
@@ -15,14 +15,11 @@ var dependable = require('dependable'),
 
 ### Register some dependencies
 
-Register a few dependencies for later use (a string and an object):
+Register a few dependencies for later use:
 
 ```js
-container.register('occupation', 'tax attorney');
-container.register('transport', {
-  type: 'station wagon',
-  material: 'wood-paneled'
-});
+container.register('app', 'web app');
+container.register('logger', function() { return 'message'; } );
 ```
 
 ### Register a dependency that has other dependencies
@@ -32,31 +29,26 @@ populated with the correct dependencies, and the return value of the function
 is registered as the dependency:
 
 ```js
-container.register('song', function (occupation, transport, legalStatus) {
-  var song = {};
-
-  song.chorus = function chorus() {
-    return [
-      'I\'m a ' + occupation,
-      'On a ' + transport.material + ' ' + transport.type + ' I ride',
-      'And I\'m ' + legalStatus.message
-    ].join('\n');
-  };
-
-  return song;
+container.register('app', function (logger, middleware) {
+  let app = {
+    log: function() {
+      return logger;
+    },
+    middleware };
+  return app;
 });
 ```
 
 ### Register a dependency out-of-order
 
-`song` depends on a `legalStatus`, which hasn't been registered yet.
+`app` depends on a `middleware`, which hasn't been registered yet.
 Dependable resolves dependencies lazily, so we can define this dependency
 after-the-fact:
 
 ```js
-container.register('legalStatus', {
-  warrants: [],
-  message: 'without outstanding warrants'
+container.register('middleware', {
+  session: 'cookies',
+  auth: 'json-web-token'
 });
 ```
 
@@ -66,49 +58,11 @@ Like with container.register, the function arguments are automatically resolved,
 with their dependencies:
 
 ```js
-container.resolve(function (song) {
+container.resolve(function (logger) {
+  console.log(logger);
   /*
-   * I'm a tax attorney
-   * On a wood-paneled station wagon I ride
-   * And I'm without outstanding warrants
+   * message
    */
-  console.log(song.chorus());
-});
-```
-
-### Re-register dependencies
-
-As it stands, `song` returns boring, non-catchy lyrics. One way to change its behavior
-is to re-register its dependencies:
-
-```js
-container.register('occupation', 'cowboy');
-container.register('legalStatus', {
-  warrants: [
-    {
-      for: 'shooting the sheriff',
-      notes: 'did not shoot the deputy'
-    }
-  ],
-  message: 'wanted: dead or alive'
-});
-```
-
-This is really useful in a number of situations:
-
-1. A container can register configuration parameters for an application---for example, a port---and allows them to be changed later
-2. Dependencies can be replaced with mock objects in order to test other dependencies
-
-To resolve the updated dependencies, provide an empty override:
-
-```js
-container.resolve({}, function (song) {
-  /*
-   * I'm a cowboy
-   * On a wood-paneled station wagon I ride
-   * And I'm wanted: dead or alive
-   */
-  console.log(song.chorus());
 });
 ```
 
@@ -117,30 +71,19 @@ container.resolve({}, function (song) {
 It's also possible to override dependencies at resolve time:
 
 ```js
-var horse = {
-  type: 'horse',
-  material: 'steel'
-};
+let logger = 'overridden message';
 
-container.resolve({ transport: horse }, function (song) {
+container.resolve({ logger: logger }, function (app) {
+  console.log(app.log());
   /*
-   * I'm a cowboy
-   * On a steel horse I ride
-   * And I'm wanted: dead or alive
+   * overridden message
    */
-  console.log(song.chorus());
 });
 ```
 
-Sounds like a hit!
-
 ## API
 
-`container.register(name, function)` - Registers a dependency by name. `function` can be a function that takes dependencies and returns anything, or an object itself with no dependencies.
-
-`container.register(hash)` - Registers a hash of names and dependencies. This is useful for setting configuration constants.
-
-`container.load(fileOrFolder)` - Registers a file, using its file name as the name, or all files in a folder. Does not traverse subdirectories.
+`container.register(name, function|object)` - Registers a dependency by name.
 
 `container.get(name, overrides = {})` - Returns a dependency by name, with all dependencies injected. If you specify overrides, the dependency will be given those overrides instead of those registered.
 
@@ -151,8 +94,6 @@ Sounds like a hit!
 `container.list()` - Return a list of registered dependencies.
 
 ## Development
-
-Dependable is written in coffeescript. To generate javascript, run `npm run prepublish`.
 
 Tests are written with mocha. To run the tests, run `npm test`.
 
