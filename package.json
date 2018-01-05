@@ -10,8 +10,8 @@
     "url": "git@github.com:Schoonology/dependable.git"
   },
   "scripts": {
-    "test": "mocha -R spec --compilers coffee:coffee-script test/*",
-    "test:debug": "mocha -R spec --inspect-brk --compilers coffee:coffee-script test/*"
+    "test": "mocha -R spec test/**/*.js",
+    "test:debug": "mocha -R spec --inspect-brk test/**/*.js"
   },
   "license": "MIT",
   "dependencies": {},
