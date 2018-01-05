@@ -1,5 +1,5 @@
 coffee = require('coffee-script');
-container = require('../index').container();
+container = require('../rewrite').container();
 assert = require('assert');
 
 describe('resolve', function () {

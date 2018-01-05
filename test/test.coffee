@@ -1,5 +1,5 @@
 
-{container} = require '../index'
+{container} = require '../rewrite.js'
 assert = require 'assert'
 fs = require 'fs'
 os = require 'os'
