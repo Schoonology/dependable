@@ -225,7 +225,10 @@ describe("dependency injection", function() {
       subject.register("router", function() {
         return "route";
       });
-      subject.resolve(function(logger, router) {
+      // prettier-ignore
+      subject.resolve(function(logger,
+        router
+      ) {
         assert.equal(logger, "message");
         assert.equal(router, "route");
         done();

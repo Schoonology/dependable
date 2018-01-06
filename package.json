@@ -12,12 +12,14 @@
     "url": "git@github.com:testdouble/dependable.git"
   },
   "scripts": {
+    "lint": "prettier --write \"**/*.js\"",
     "test": "mocha -R spec test/**/*.js",
     "test:debug": "mocha -R spec --inspect-brk test/**/*.js"
   },
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
-    "mocha": "^4.1.0"
+    "mocha": "^4.1.0",
+    "prettier": "^1.9.2"
   }
 }
