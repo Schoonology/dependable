@@ -13,6 +13,7 @@
   },
   "scripts": {
     "lint": "prettier --write \"**/*.js\"",
+    "postversion": "git push --follow-tags && npm publish",
     "test": "mocha -R spec test/**/*.js",
     "test:debug": "mocha -R spec --inspect-brk test/**/*.js"
   },
