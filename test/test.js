@@ -165,12 +165,6 @@ describe("dependency injection", function() {
         assert.throws(() => subject.get("goats"));
       });
     });
-
-    context("internals", function() {
-      it('should register the container as "_container"', function() {
-        assert.equal(subject.get("_container"), subject);
-      });
-    });
   });
 
   describe("#list", function() {
@@ -181,9 +175,8 @@ describe("dependency injection", function() {
       subject.register("router", function() {
         return "route";
       });
-      assert.equal(Object.keys(subject.list()).length, 3);
+      assert.equal(Object.keys(subject.list()).length, 2);
       assert.deepEqual(Object.keys(subject.list()), [
-        "_container",
         "logger",
         "router"
       ]);

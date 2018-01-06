@@ -98,7 +98,5 @@ exports.container = () => {
     list: () => factories
   };
 
-  container.register("_container", container);
-
   return container;
 };
