@@ -1,6 +1,3 @@
-const path = require("path");
-const fs = require("fs");
-
 const EMPTY_STRING = "";
 const FUNCTION_SIGNATURE = /function.*?\(([\s\S]*?)\)/;
 
