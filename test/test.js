@@ -9,59 +9,76 @@ describe('dependency injection', function () {
     subject = container()
   })
 
-  describe('#register', function () {
-    it('should register a factory', function () {
-      subject.register('logger', function () {
-        return 'message'
-      })
+  describe('#constant', function () {
+    it('should register a string', function () {
+      subject.constant('logger', 'message')
       assert.equal(subject.get('logger'), 'message')
     })
 
     it('should register an object', function () {
-      subject.register('logger', 'message')
+      subject.constant('logger', { message: 'log message' })
+      assert.equal(subject.get('logger').message, 'log message')
+    })
+
+    it('should fail to register a non-object', function () {
+      assert.throws(() => subject.constant('logger', function () {
+        return 'message'
+      }), /Cannot register a constant that is not a string or object./)
+    })
+  })
+
+  describe('#factory', function () {
+    it('should register a function', function () {
+      subject.factory('logger', function () {
+        return 'message'
+      })
       assert.equal(subject.get('logger'), 'message')
     })
 
     it('should fail to register a missing function', function () {
-      assert.throws(() => subject.register('logger'), /cannot register null function/)
+      assert.throws(() => subject.factory('logger'), /Cannot register a factory if no factory is provided./)
     })
 
     it('should fail to register a null function', function () {
-      assert.throws(() => subject.register('logger', null), /cannot register null function/)
+      assert.throws(() => subject.factory('logger', null), /Cannot register a factory if no factory is provided./)
     })
 
     it('should fail to register an arrow function', function () {
-      assert.throws(() => subject.register('logger', () => {}), /could not parse function arguments/)
+      assert.throws(() => subject.factory('logger', () => {}), /Could not parse function arguments/)
+    })
+
+    it('should fail to register a non-function', function () {
+      assert.throws(() => subject.factory('logger', 'message'))
     })
 
     it('should register a factory with a single dependency', function () {
-      subject.register('logger', function () {
+      subject.factory('logger', function () {
         return 'message'
       })
-      subject.register('app', function (logger) {
+      subject.factory('app', function (logger) {
         return logger
       })
       assert.equal(subject.get('app'), 'message')
     })
 
     it('should not care about dependency registration order', function () {
-      subject.register('app', function (logger) {
+      subject.factory('app', function (logger) {
         return logger
       })
-      subject.register('logger', function () {
+      subject.factory('logger', function () {
         return 'message'
       })
       assert.equal(subject.get('app'), 'message')
     })
 
     it('should register a factory with multiple dependencies', function () {
-      subject.register('app', function (logger, router) {
+      subject.factory('app', function (logger, router) {
         return [logger, router]
       })
-      subject.register('logger', function () {
+      subject.factory('logger', function () {
         return 'message'
       })
-      subject.register('router', function () {
+      subject.factory('router', function () {
         return 'route'
       })
       assert.deepEqual(subject.get('app'), ['message', 'route'])
@@ -70,20 +87,20 @@ describe('dependency injection', function () {
 
   describe('#get', function () {
     it('should return a registered dependency', function () {
-      subject.register('logger', function () {
+      subject.factory('logger', function () {
         return 'message'
       })
       assert.equal(subject.get('logger'), 'message')
     })
 
     it('should allow overriding of a dependency with an object', function () {
-      subject.register('app', function (logger, router) {
+      subject.factory('app', function (logger, router) {
         return [logger, router]
       })
-      subject.register('logger', function () {
+      subject.factory('logger', function () {
         return 'message'
       })
-      subject.register('router', function () {
+      subject.factory('router', function () {
         return 'route'
       })
       assert.deepEqual(
@@ -95,26 +112,26 @@ describe('dependency injection', function () {
     })
 
     it('should traverse a graph of dependencies', function () {
-      subject.register('app', function (logger) {
+      subject.factory('app', function (logger) {
         return logger
       })
-      subject.register('logger', function (formatter) {
+      subject.factory('logger', function (formatter) {
         return formatter('message')
       })
-      subject.register('formatter', function () {
+      subject.factory('formatter', function () {
         return message => `formatted ${message}`
       })
       assert.deepEqual(subject.get('app'), 'formatted message')
     })
 
     it('should only initialize a dependency once', function () {
-      subject.register('logger', function (formatter) {
+      subject.factory('logger', function (formatter) {
         return { formatter }
       })
-      subject.register('router', function (formatter) {
+      subject.factory('router', function (formatter) {
         return { formatter }
       })
-      subject.register('formatter', function () {
+      subject.factory('formatter', function () {
         return message => `formatted ${message}`
       })
       assert.equal(
@@ -124,10 +141,10 @@ describe('dependency injection', function () {
     })
 
     it('should not clobber dependencies that are overridden', function () {
-      subject.register('logger', function (formatter) {
+      subject.factory('logger', function (formatter) {
         return formatter('message')
       })
-      subject.register('formatter', function () {
+      subject.factory('formatter', function () {
         return message => `formatted ${message}`
       })
       assert.equal(
@@ -139,26 +156,26 @@ describe('dependency injection', function () {
 
     context('errors', function () {
       it('should throw error on circular dependency', function () {
-        subject.register('app', function (logger) {
+        subject.factory('app', function (logger) {
           return logger
         })
-        subject.register('logger', function (app) {
+        subject.factory('logger', function (app) {
           return app
         })
         assert.throws(() => subject.get('app'), /circular dependency/)
       })
 
       it('should NOT throw circular dependency error if two modules require the same dependency', function () {
-        subject.register('app', function (logger, router) {
+        subject.factory('app', function (logger, router) {
           return [logger, router]
         })
-        subject.register('logger', function (formatter) {
+        subject.factory('logger', function (formatter) {
           return formatter('message')
         })
-        subject.register('router', function (formatter) {
+        subject.factory('router', function (formatter) {
           return formatter('route')
         })
-        subject.register('formatter', function () {
+        subject.factory('formatter', function () {
           return message => `formatted ${message}`
         })
         assert.deepEqual(subject.get('app'), [
@@ -172,7 +189,7 @@ describe('dependency injection', function () {
       })
 
       it('should throw an error if it cant find a transitive dependency', function () {
-        subject.register('goats', function (cans) {
+        subject.factory('goats', function (cans) {
           return cans
         })
         assert.throws(() => subject.get('goats'))
@@ -190,17 +207,17 @@ describe('test utils', function () {
 
   describe('#getSandboxed', function () {
     it('should return a module without deps', function () {
-      subject.register('logger', function () {
+      subject.factory('logger', function () {
         return 'message'
       })
       return assert.equal(subject.getSandboxed('logger'), 'message')
     })
 
     it('should get a single, replaced dependency', function () {
-      subject.register('logger', function (formatter) {
+      subject.factory('logger', function (formatter) {
         return formatter('message')
       })
-      subject.register('formatter', function () {
+      subject.factory('formatter', function () {
         return message => `formatted ${message}`
       })
       assert.equal(
@@ -212,10 +229,10 @@ describe('test utils', function () {
     })
 
     it('should throw if an override is missing', function () {
-      subject.register('logger', function (formatter) {
+      subject.factory('logger', function (formatter) {
         return formatter('message')
       })
-      subject.register('formatter', function () {
+      subject.factory('formatter', function () {
         return message => `formatted ${message}`
       })
       assert.throws(() => subject.getSandboxed('logger'), /was not registered/)

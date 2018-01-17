@@ -1,23 +1,12 @@
 const EMPTY_STRING = ''
 const FUNCTION_SIGNATURE = /function.*?\(([\s\S]*?)\)/
 
-function toFactory (func) {
-  if (typeof func === 'function') {
-    return { func, required: argList(func) }
-  } else {
-    return { func: () => func, required: [] }
-  }
-}
-
 function argList (func) {
   const match = func.toString().match(FUNCTION_SIGNATURE)
   if (match === null) {
-    throw new Error(
-      `could not parse function arguments: ${
-        func != null ? func.toString() : EMPTY_STRING
-      }`
-    )
+    throw new Error(`Could not parse function arguments: ${func != null ? func.toString() : EMPTY_STRING}`)
   }
+
   return match[1]
     .split(',')
     .filter(a => a)
@@ -25,13 +14,36 @@ function argList (func) {
 }
 
 exports.container = () => {
-  const factories = {}
+  const dependencyMap = {}
 
-  const register = (name, func) => {
-    if (func == null) {
-      throw new Error('cannot register null function')
+  const constant = (name, object) => {
+    if (object == null) {
+      throw new Error('Cannot register a constant if no object is provided.')
     }
-    factories[name] = toFactory(func)
+
+    if (typeof object !== 'object' && typeof object !== 'string') {
+      throw new Error(`Cannot register a constant that is not a string or object. Provided constant was a ${typeof object}.`)
+    }
+
+    dependencyMap[name] = {
+      func: () => object,
+      required: []
+    }
+  }
+
+  const factory = (name, func) => {
+    if (func == null) {
+      throw new Error('Cannot register a factory if no factory is provided.')
+    }
+
+    if (typeof func !== 'function') {
+      throw new Error(`Cannot register a factory that is not a function. Provided factory was a ${typeof object}.`)
+    }
+
+    dependencyMap[name] = {
+      func,
+      required: argList(func)
+    }
   }
 
   const get = (name, overrides = null, visited = []) => {
@@ -41,16 +53,16 @@ exports.container = () => {
       throw new Error(`circular dependency with '${name}'`)
     }
 
-    let factory = factories[name]
-    if (factory == null) {
+    const dependency = dependencyMap[name]
+    if (dependency == null) {
       throw new Error(`dependency '${name}' was not registered`)
     }
 
-    if (factory.instance != null && !isOverridden) {
-      return factory.instance
+    if (dependency.instance != null && !isOverridden) {
+      return dependency.instance
     }
 
-    let dependencies = factory.required.map(dep => {
+    const childDependencies = dependency.required.map(dep => {
       if ((overrides != null ? overrides[dep] : void 0) != null) {
         return overrides != null ? overrides[dep] : void 0
       } else {
@@ -58,10 +70,10 @@ exports.container = () => {
       }
     })
 
-    let instance = factory.func.apply(factory, dependencies)
+    const instance = dependency.func.apply(dependency, childDependencies)
 
     if (!isOverridden) {
-      factory.instance = instance
+      dependency.instance = instance
     }
 
     return instance
@@ -73,14 +85,16 @@ exports.container = () => {
 
   const getSandboxed = (name, overrides) => {
     const mockContainer = exports.container()
-    mockContainer.register(name, factories[name].func)
+    mockContainer.factory(name, dependencyMap[name].func)
+
     return mockContainer.get(name, overrides)
   }
 
-  let container = {
+  const container = {
+    constant,
     get,
     getSandboxed,
-    register
+    factory
   }
 
   return container
