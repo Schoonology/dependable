@@ -26,6 +26,10 @@ describe('dependency injection', function () {
       assert.throws(() => subject.register('logger'), /cannot register null function/)
     })
 
+    it('should fail to register a null function', function () {
+      assert.throws(() => subject.register('logger', null), /cannot register null function/)
+    })
+
     it('should register a factory with a single dependency', function () {
       subject.register('logger', function () {
         return 'message'
