@@ -16,7 +16,7 @@ function argList (func) {
 exports.container = () => {
   const dependencyMap = {}
 
-  const constant = (name, object) => {
+  function constant (name, object) {
     if (object == null) {
       throw new Error('Cannot register a constant if no object is provided.')
     }
@@ -31,7 +31,7 @@ exports.container = () => {
     }
   }
 
-  const factory = (name, func) => {
+  function factory (name, func) {
     if (func == null) {
       throw new Error('Cannot register a factory if no factory is provided.')
     }
@@ -46,8 +46,8 @@ exports.container = () => {
     }
   }
 
-  const get = (name, overrides = null, visited = []) => {
-    let isOverridden = overrides != null
+  function get (name, overrides = null, visited = []) {
+    const isOverridden = overrides != null
 
     if (haveVisited(visited, name)) {
       throw new Error(`circular dependency with '${name}'`)
@@ -79,23 +79,21 @@ exports.container = () => {
     return instance
   }
 
-  const haveVisited = (visited, name) => {
+  function haveVisited (visited, name) {
     return visited.filter(n => n === name).length
   }
 
-  const getSandboxed = (name, overrides) => {
+  function getSandboxed (name, overrides) {
     const mockContainer = exports.container()
     mockContainer.factory(name, dependencyMap[name].func)
 
     return mockContainer.get(name, overrides)
   }
 
-  const container = {
+  return {
     constant,
     get,
     getSandboxed,
     factory
   }
-
-  return container
 }
