@@ -71,15 +71,6 @@ exports.container = () => {
     return visited.filter(n => n === name).length
   }
 
-  const resolve = (overrides, func) => {
-    if (!func) {
-      func = overrides
-      overrides = null
-    }
-    register('__temp', func)
-    return get('__temp', overrides)
-  }
-
   const getSandboxed = (name, overrides) => {
     const mockContainer = exports.container()
     mockContainer.register(name, factories[name].func)
@@ -89,9 +80,7 @@ exports.container = () => {
   let container = {
     get,
     getSandboxed,
-    resolve,
-    register,
-    list: () => factories
+    register
   }
 
   return container
