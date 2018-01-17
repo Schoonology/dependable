@@ -13,6 +13,7 @@
   },
   "scripts": {
     "lint": "standard --fix",
+    "preversion": "npm run lint && npm test",
     "postversion": "git push --follow-tags && npm publish",
     "test": "mocha -R spec test/**/*.js",
     "test:debug": "mocha -R spec --inspect-brk test/**/*.js"
