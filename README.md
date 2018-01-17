@@ -44,7 +44,7 @@ container.constant('config', {
 });
 ```
 
-To get a registered dependency, simply use `dependable.get`:
+To get a registered dependency, simply use `container.get`:
 
 ```JavaScript
 const logger = container.get('logger');
