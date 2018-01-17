@@ -12,7 +12,8 @@
     "url": "git@github.com:testdouble/dependable.git"
   },
   "scripts": {
-    "lint": "standard --fix",
+    "lint": "standard",
+    "style": "standard --fix",
     "preversion": "npm run lint && npm test",
     "postversion": "git push --follow-tags && npm publish",
     "test": "mocha -R spec test/**/*.js",
