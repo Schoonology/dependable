@@ -1,7 +1,7 @@
 const EMPTY_STRING = ''
 const FUNCTION_SIGNATURE = /function.*?\(([\s\S]*?)\)/
 
-function argList (func) {
+function getDependenciesFromArgumentList (func) {
   const match = func.toString().match(FUNCTION_SIGNATURE)
   if (match === null) {
     throw new Error(`Could not parse function arguments: ${func != null ? func.toString() : EMPTY_STRING}`)
@@ -42,7 +42,7 @@ exports.container = () => {
 
     dependencyMap[name] = {
       func,
-      required: argList(func)
+      required: getDependenciesFromArgumentList(func)
     }
   }
 
