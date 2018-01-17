@@ -50,12 +50,12 @@ exports.container = () => {
     const isOverridden = overrides != null
 
     if (haveVisited(visited, name)) {
-      throw new Error(`circular dependency with '${name}'`)
+      throw new Error(`Circular dependency with '${name}'.`)
     }
 
     const dependency = dependencyMap[name]
     if (dependency == null) {
-      throw new Error(`dependency '${name}' was not registered`)
+      throw new Error(`Dependency '${name}' was not registered.`)
     }
 
     if (dependency.instance != null && !isOverridden) {

@@ -155,6 +155,10 @@ describe('dependency injection', function () {
     })
 
     context('errors', function () {
+      it('should throw an error for a missing dependency', function () {
+        assert.throws(() => subject.get('app'), /Dependency 'app' was not registered/)
+      })
+
       it('should throw error on circular dependency', function () {
         subject.factory('app', function (logger) {
           return logger
@@ -162,7 +166,7 @@ describe('dependency injection', function () {
         subject.factory('logger', function (app) {
           return app
         })
-        assert.throws(() => subject.get('app'), /circular dependency/)
+        assert.throws(() => subject.get('app'), /Circular dependency/)
       })
 
       it('should NOT throw circular dependency error if two modules require the same dependency', function () {
