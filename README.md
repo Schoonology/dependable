@@ -18,21 +18,29 @@ const dependable = require('dependable');
 const container = dependable.container();
 ```
 
-To register a new dependency, call `container.register`:
+To register a new factory dependency, call `container.factory`:
 
 ```JavaScript
-container.register('formatter', function () {
+container.factory('formatter', function () {
   return function (message) {
     return `formatted ${message}`;
   };
 });
 ```
 
-Dependencies can depend on each other as well:
+Factories can depend on other dependencies as well:
 
 ```JavaScript
-container.register('logger', function (formatter) {
+container.factory('logger', function (formatter) {
   return formatter('logged message');
+});
+```
+
+You can also register constant dependencies as objects with `container.constant`:
+
+```JavaScript
+container.constant('config', {
+  password: '********'
 });
 ```
 
@@ -45,26 +53,15 @@ const logger = container.get('logger');
 console.log(logger);
 ```
 
-You can also resolve a dependency with a callback using `dependable.resolve`:
-
-```JavaScript
-container.resolve('logger', function (logger) {
-  // This will print "formatted logged message"
-  console.log(logger);
-});
-```
-
 ## API
 
-`container.register(name, function)` - Registers a dependency by name. `function` can be a function that takes dependencies and returns anything, or an object itself with no dependencies.
+`container.factory(name, function)` - Registers a factory dependency by name. `function` must be a function that takes dependencies and returns anything.
+
+`container.constant(name, object)` - Registers a constant dependency by name. `object` must be an object or string with no dependencies.
 
 `container.get(name, overrides = {})` - Returns a dependency by name, with all dependencies injected. If you specify overrides, the dependency will be given those overrides instead of those registered.
 
 `container.getSandboxed(name, overrides = {})` - Returns a dependency by name, with all dependencies injected. Unlike `get`, you _must_ specify overrides for all dependencies. This can (and should) be used during testing to ensure a module under test has been competely isolated.
-
-`container.resolve(overrides={}, cb)` - Calls `cb` like a dependency function, injecting any dependencies found in the signature. Like `container.get`, this supports overrides.
-
-`container.list()` - Return a list of registered dependencies.
 
 ## Development
 
