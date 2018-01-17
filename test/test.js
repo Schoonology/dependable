@@ -61,6 +61,14 @@ describe('dependency injection', function () {
       assert.equal(subject.get('app'), 'message')
     })
 
+    it('should register a factory with a constant dependency', function () {
+      subject.constant('logger', 'message')
+      subject.factory('app', function (logger) {
+        return logger
+      })
+      assert.equal(subject.get('app'), 'message')
+    })
+
     it('should not care about dependency registration order', function () {
       subject.factory('app', function (logger) {
         return logger
@@ -86,10 +94,15 @@ describe('dependency injection', function () {
   })
 
   describe('#get', function () {
-    it('should return a registered dependency', function () {
+    it('should return a registered factory', function () {
       subject.factory('logger', function () {
         return 'message'
       })
+      assert.equal(subject.get('logger'), 'message')
+    })
+
+    it('should return a registered constant', function () {
+      subject.constant('logger', 'message')
       assert.equal(subject.get('logger'), 'message')
     })
 
