@@ -1,13 +1,15 @@
 const EMPTY_STRING = ''
-const FUNCTION_SIGNATURE = /function.*?\(([\s\S]*?)\)/
+const FUNCTION_EXPRESSION_SIGNATURE = /function.*?\(([\s\S]*?)\)/
+const ARROW_FUNCTION_SIGNATURE = /\(([\s\S]*?)\)/
 
 function getDependenciesFromArgumentList (func) {
-  const match = func.toString().match(FUNCTION_SIGNATURE)
-  if (match === null) {
+  const functionExpressionMatch = func.toString().match(FUNCTION_EXPRESSION_SIGNATURE)
+  const arrowFunctionMatch = func.toString().match(ARROW_FUNCTION_SIGNATURE)
+  if (functionExpressionMatch === null && arrowFunctionMatch === null) {
     throw new Error(`Could not parse function arguments: ${func != null ? func.toString() : EMPTY_STRING}`)
   }
 
-  return match[1]
+  return (functionExpressionMatch && functionExpressionMatch[1] || arrowFunctionMatch && arrowFunctionMatch[1])
     .split(',')
     .filter(a => a)
     .map(str => str.trim())

@@ -35,16 +35,17 @@ describe('dependency injection', function () {
       assert.equal(subject.get('logger'), 'message')
     })
 
+    it('should register an arrow function', function () {
+      subject.factory('arrow', () => 'arrow-fn')
+      assert.equal(subject.get('arrow'), 'arrow-fn')
+    })
+
     it('should fail to register a missing function', function () {
       assert.throws(() => subject.factory('logger'), /Cannot register a factory if no factory is provided./)
     })
 
     it('should fail to register a null function', function () {
       assert.throws(() => subject.factory('logger', null), /Cannot register a factory if no factory is provided./)
-    })
-
-    it('should fail to register an arrow function', function () {
-      assert.throws(() => subject.factory('logger', () => {}), /Could not parse function arguments/)
     })
 
     it('should fail to register a non-function', function () {
@@ -58,6 +59,12 @@ describe('dependency injection', function () {
       subject.factory('app', function (logger) {
         return logger
       })
+      assert.equal(subject.get('app'), 'message')
+    })
+
+    it('should register an arrow function factory with a single dependency', function () {
+      subject.factory('logger', () => 'message')
+      subject.factory('app', (logger) => logger)
       assert.equal(subject.get('app'), 'message')
     })
 
@@ -89,6 +96,13 @@ describe('dependency injection', function () {
       subject.factory('router', function () {
         return 'route'
       })
+      assert.deepEqual(subject.get('app'), ['message', 'route'])
+    })
+
+    it('should register an arrow function factory with multiple dependencies', function () {
+      subject.factory('app', (logger, router) => [logger, router])
+      subject.factory('logger', () => 'message')
+      subject.factory('router', () => 'route')
       assert.deepEqual(subject.get('app'), ['message', 'route'])
     })
   })
