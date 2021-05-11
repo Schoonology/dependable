@@ -71,4 +71,4 @@ Tests are written with Mocha. To run the tests, run `npm test`.
 
 [MIT][license]
 
-[license]: https://github.com/Schoonology/dependable/blob/master/LICENSE
+[license]: https://github.com/testdouble/dependable/blob/main/LICENSE
